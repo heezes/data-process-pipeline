@@ -1,7 +1,10 @@
+try:
+    import jfwEncoderDecoder.jfw_deserializer as jfw
+except:
+    pass
 from pynamodb.models import Model
 from pynamodb.attributes import NumberAttribute, UnicodeAttribute, JSONAttribute
 from pathlib import Path
-import jfwEncoderDecoder.jfw_deserializer as jfw
 import json
 import os
 import glob
@@ -13,7 +16,8 @@ import pygeohash as gh
 import firebase_db
 import iot
 import time
-
+from Deserializer import guru_decode
+ 
 
 def customCallback(payload, responseStatus, token, id=None):
     global db
@@ -79,7 +83,7 @@ def decode_file(deviceId, thread, batch, path):
                     pass
         print(ser.loss())
 
-def decode_and_push_data(Thread,batch):
+def decode_and_push_data(Thread,batch, filter_devices):
     print("Listing Files")
     try:
         files = glob.glob("/var/data/*.bin", recursive=True)
@@ -92,7 +96,12 @@ def decode_and_push_data(Thread,batch):
             deviceId = temp[0]+"-"+temp[1]+"-"+temp[2]
             fileLastModified = os.path.getmtime(filepath)
             if(time.time() - fileLastModified > (60*60*3)):
-                decode_file(deviceId, Thread, batch, filepath)
+                if deviceId in filter_devices:
+                    decode_file(deviceId, Thread, batch, filepath)
+                else:
+                    print("Decoding Via New Method")
+                    NewProcess = guru_decode.ProcessRawData(filepath)
+                    NewProcess.decodeAndUpload(filepath)
                 shutil.move(filepath, "/var/backup/"+filename)
             else:
                 print("File too new to be processed!")
@@ -119,6 +128,11 @@ class Thread(Model):
 try:
     # Thread.delete_table()
     # time.sleep(5)
+    filter_devices = []
+    with open(os.path.join(os.path.dirname(__file__),"Deserializer/filter_device.json"), 'r') as filter_file:
+        file_data = filter_file.read()
+        temp_json_data = json.loads(file_data)
+        filter_devices = temp_json_data["filtered_devices"]
     aws_things = iot.deviceShawdow('LioBatteries')
     db = firebase_db.rtdb()
     db.connect()
@@ -150,7 +164,7 @@ try:
                 log.debug("Table Created")
             try:
                 with Thread.batch_write(auto_commit=True) as  batch:
-                    decode_and_push_data(Thread,batch)
+                    decode_and_push_data(Thread,batch, filter_devices)
                     log.debug("Saved")
                     print("Saved")
             except Exception as e:
