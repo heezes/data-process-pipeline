@@ -1,5 +1,5 @@
 from textwrap import indent
-from Deserializer.aws_uploader import AWSUploader, VIM_REALTIME_DATA,VIM_LOGGED_DATA
+from Deserializer.aws_uploader import AWSUploader, VIM_REALTIME_DATA,VIM_LOGGED_DATA,VIM_LOGGED_DATA_V2
 from Deserializer.deserializer import DeSerializer, BASEDIR
 from Deserializer.dataformatter import DataFormatter
 import os, json
@@ -20,8 +20,8 @@ class ProcessRawData():
             f.write(json.dumps(deSerialized_data, indent=4))
             f.close()
             vimformatter=DataFormatter(outfilepath)
-            formatted_data=vimformatter.formatted_vimloggeddata
-            awsuploader=AWSUploader(TABLE_ID=VIM_LOGGED_DATA,DEVICE_ID=self.deviceId,data_dict=formatted_data)
+            formatted_data=vimformatter.vimloggeddata_v2_formatter()
+            awsuploader=AWSUploader(TABLE_ID=VIM_LOGGED_DATA_V2,DEVICE_ID=self.deviceId,data_dict=formatted_data)
             print(awsuploader.push_to_aws())
             os.remove(outfilepath)
         except:

@@ -13,7 +13,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from functools import partial
 import pygeohash as gh
-import firebase_db
+# import firebase_db
 import iot
 import time
 from Deserializer import guru_decode
