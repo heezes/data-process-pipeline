@@ -133,10 +133,10 @@ try:
         file_data = filter_file.read()
         temp_json_data = json.loads(file_data)
         filter_devices = temp_json_data["filtered_devices"]
-    aws_things = iot.deviceShawdow('LioBatteries')
-    db = firebase_db.rtdb()
-    db.connect()
-    things = aws_things.getThingList()
+    # aws_things = iot.deviceShawdow('LioBatteries')
+    # db = firebase_db.rtdb()
+    # db.connect()
+    # things = aws_things.getThingList()
     log = logging.getLogger(__file__)
     log.setLevel(logging.DEBUG)
     try:
@@ -171,9 +171,9 @@ try:
                 log.debug(str(e))
                 print(str(e))
                 pass
-        for items in things:
-            aws_things.getDeviceShadow(items, callback=partial(customCallback,id=items))
-            time.sleep(1)
+        # for items in things:
+        #     aws_things.getDeviceShadow(items, callback=partial(customCallback,id=items))
+        #     time.sleep(1)
         time.sleep(1*60)
 except Exception as e:
     log.debug("Exiting Code :"+str(e))

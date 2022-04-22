@@ -1,5 +1,6 @@
 from re import S
 import pyrebase
+import os
 import json
 
 config = {
@@ -18,7 +19,9 @@ class rtdb():
         try:
             firebase = pyrebase.initialize_app(config)
             auth = firebase.auth()
-            user = auth.sign_in_with_email_and_password("altamash.ar96@gmail.com", "ab8127743728")
+            email =  os.environ["FIREBASE_EMAIL"]
+            password =  os.environ["FIREBASE_PASSWORD"]
+            user = auth.sign_in_with_email_and_password(email, password)
             self.db = firebase.database()
             self.connected = True
         except:

@@ -2,7 +2,6 @@ from pynamodb.models import Model
 from pynamodb.attributes import NullAttribute, NumberAttribute, UnicodeAttribute, JSONAttribute, UnicodeSetAttribute,ListAttribute,BooleanAttribute, UTCDateTimeAttribute
 import json
 import os,time
-from tqdm import tqdm
 
 VIM_REALTIME_DATA=1
 VIM_LOGGED_DATA=2
