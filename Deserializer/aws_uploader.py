@@ -39,7 +39,7 @@ class Vim_Logged_Data_V2(Model):
         # os.environ["TABLE_NAME"] = "vim_logged_data_v2"
         # os.environ["AWS_ACCESS_KEY_ID"] = cred['AWS_ACCESS_KEY_ID']
         # os.environ["AWS_SECRET_ACCESS_KEY"] = cred['AWS_SECRET_ACCESS_KEY']
-        table_name = os.environ["TABLE_NAME"]
+        table_name = os.environ["TABLE_NAME_V2"]
         aws_access_key_id = os.environ["AWS_ACCESS_KEY_ID"]
         aws_secret_access_key = os.environ["AWS_SECRET_ACCESS_KEY"]
         # Specifies the region
