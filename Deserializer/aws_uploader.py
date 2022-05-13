@@ -277,6 +277,6 @@ data_dict={
                             f'Exception {e} occured during to data upload')
                         print(e)
                         pass
-            # print("counts uploaded:", uploaded_counts)
+            print(f"Uploaded: {uploaded_counts} out of {len(self.__datalist)}")
 
         return logs
