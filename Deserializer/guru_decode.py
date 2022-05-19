@@ -3,6 +3,7 @@ from Deserializer.aws_uploader import AWSUploader, VIM_REALTIME_DATA,VIM_LOGGED_
 from Deserializer.deserializer import DeSerializer, BASEDIR
 from Deserializer.dataformatter import DataFormatter
 import os, json
+import time
 
 class ProcessRawData():
     def __init__(self, filepath):
@@ -21,9 +22,11 @@ class ProcessRawData():
             f.close()
             vimformatter=DataFormatter(outfilepath)
             formatted_data=vimformatter.vimloggeddata_v2_formatter()
+            print(f"Discarded Frame: {deSerializer.get_info['discarded_frames_count']} Found Frame: {deSerializer.get_info['frame found']}")
             awsuploader=AWSUploader(TABLE_ID=VIM_LOGGED_DATA_V2,DEVICE_ID=self.deviceId,data_dict=formatted_data)
             print(awsuploader.push_to_aws())
             os.remove(outfilepath)
-        except:
-            print("Guru decodeAndUpload Error!")
+            print("{}: Upload Successful!".format(time.time()))
+        except Exception as e:
+            print(f"{time.time()}: Guru decodeAndUpload Error: {str(e)}")
             pass

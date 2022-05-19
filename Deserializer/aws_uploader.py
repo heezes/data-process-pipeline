@@ -206,7 +206,7 @@ data_dict={
             pass
         elif self.__table_type == VIM_LOGGED_DATA_V2:
             # uploadingbar = tqdm(total=len(self.__datalist))
-            # uploaded_counts = 0
+            uploaded_counts = 0
             for data in self.__datalist:
                 with Vim_Logged_Data_V2.batch_write(auto_commit=True) as batch:
                     try:
@@ -270,12 +270,11 @@ data_dict={
                                                           'batteryId', None))
                             batch.save(item)
                             # uploadingbar.update(1)
-                            # uploaded_counts += 1
+                            uploaded_counts += 1
                             time.sleep(0.065)
                     except Exception as e:
                         logs.append(
                             f'Exception {e} occured during to data upload')
-                        print(e)
                         pass
             print(f"Uploaded: {uploaded_counts} out of {len(self.__datalist)}")
 
