@@ -221,7 +221,8 @@ class VIMDecoder:
             'batterybalancingstatus_flag': 1,
             'fault_flag': 1,
             'batteryid_flag': 1,
-            'reserved0': 6,
+            'RideStart_flag':1,
+            'reserved0': 5,
             'batterystackvoltage_flag': 4,
             'batterythermistortemp_flag': 4,
             'reserved1': 8
@@ -718,5 +719,3 @@ class DeSerializer:
         ck_a &= 0xFF
         ck_b &= 0xFF
         return ck_a, ck_b
-
-

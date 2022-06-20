@@ -2,6 +2,7 @@ from textwrap import indent
 from Deserializer.aws_uploader import AWSUploader, VIM_REALTIME_DATA,VIM_LOGGED_DATA,VIM_LOGGED_DATA_V2
 from Deserializer.deserializer import DeSerializer, BASEDIR
 from Deserializer.dataformatter import DataFormatter
+from Deserializer.trip_info import tripInfo
 import os, json
 import time
 
@@ -26,6 +27,17 @@ class ProcessRawData():
             print(f"Discarded Frame: {info['discarded_frames_count']} Found Frame: {info['frame found']}")
             awsuploader=AWSUploader(TABLE_ID=VIM_LOGGED_DATA_V2,DEVICE_ID=self.deviceId,data_dict=formatted_data)
             print(awsuploader.push_to_aws())
+            trip = tripInfo()
+            trips = trip.getTripStats(formatted_data)
+            if len(trips) > 0:
+                awsuploader.push_trips(trips)
+            else:
+                print("No Trip Found")
+            dtc = trip.getBatteryDtcList(formatted_data)
+            if len(dtc) > 0:
+                awsuploader.push_dtc(dtc)
+            else:
+                print("No DTC found in data")
             os.remove(outfilepath)
             print("{}: Upload Successful!".format(time.time()))
         except Exception as e:

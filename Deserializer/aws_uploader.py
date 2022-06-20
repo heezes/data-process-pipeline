@@ -34,6 +34,36 @@ class Vim_Logged_Data(Model):
     async_data = JSONAttribute(null=True)
 
 
+class Vim_Logged_Trips_V2(Model):
+    class Meta:
+        table_name = os.environ["TRIP_TABLE_NAME"]
+        aws_access_key_id = os.environ["AWS_ACCESS_KEY_ID"]
+        aws_secret_access_key = os.environ["AWS_SECRET_ACCESS_KEY"]
+        region = 'us-east-1'
+    device_id = UnicodeAttribute(hash_key=True)
+    timestamp = NumberAttribute(range_key=True)
+    itemCounts = NumberAttribute(null=True)
+    startSoc = NumberAttribute(null=True)
+    stopSoc = NumberAttribute(null=True)
+    startSoh = NumberAttribute(null=True)
+    stopSoh = NumberAttribute(null=True)
+    startTimestamp = NumberAttribute(null=True)
+    stopTimestamp = NumberAttribute(null=True)
+    tripDistance = NumberAttribute(null=True)
+    tripTime = NumberAttribute(null=True)
+    batteryFault = ListAttribute(null=True)
+
+class Vim_Logged_Dtc_V2(Model):
+    class Meta:
+        table_name = os.environ["DTC_TABLE_NAME"]
+        aws_access_key_id = os.environ["AWS_ACCESS_KEY_ID"]
+        aws_secret_access_key = os.environ["AWS_SECRET_ACCESS_KEY"]
+        region = 'us-east-1'
+    device_id = UnicodeAttribute(hash_key=True)
+    timestamp = NumberAttribute(range_key=True)
+    code = NumberAttribute(null=True)
+    source = UnicodeAttribute(null=True)
+
 class Vim_Logged_Data_V2(Model):
     class Meta:
         # os.environ["TABLE_NAME"] = "vim_logged_data_v2"
@@ -46,6 +76,7 @@ class Vim_Logged_Data_V2(Model):
         region = 'us-east-1'
     device_id = UnicodeAttribute(hash_key=True)
     timestamp = NumberAttribute(range_key=True)
+    rideStart=BooleanAttribute(null=True)
     rpm = NumberAttribute(null=True)
     imuAxes = ListAttribute(null=True)
     batteryShuntCurrent = NumberAttribute(null=True)
@@ -167,6 +198,44 @@ data_dict={
         self.__device_id = DEVICE_ID
         self.__datalist = data_dict.get('data', [])
 
+    def push_trips(self, trips):
+        for trip in trips:
+            with Vim_Logged_Trips_V2.batch_write(auto_commit=True) as batch:
+                try:
+                    ts = trip['startTimestamp']
+                    if ts != None:
+                        item = Vim_Logged_Trips_V2(self.__device_id, ts,
+                                itemCounts = trip['itemCount'],
+                                startSoc = trip['startSoc'],
+                                stopSoc = trip['stopSoc'],
+                                startSoh = trip['startSoh'],
+                                stopSoh = trip['stopSoh'],
+                                startTimestamp = trip['startTimestamp'],
+                                stopTimestamp = trip['stopTimestamp'],
+                                tripDistance = trip['distance'],
+                                tripTime = trip['tripTime'],
+                                batteryFault = trip['batteryFault'] if 'batteryFault' in trip else None)
+                        batch.save(item)
+                        time.sleep(0.065)
+                except Exception as e:
+                    print(e)
+                    pass
+
+    def push_dtc(self, dtc):
+        for code in dtc:
+            with Vim_Logged_Dtc_V2.batch_write(auto_commit=True) as batch:
+                try:
+                    ts = code['timestamp']
+                    if ts != None:
+                        item = Vim_Logged_Dtc_V2(self.__device_id, ts,
+                                code = code['fault'],
+                                source = "Battery")
+                        batch.save(item)
+                        time.sleep(0.065)
+                except Exception as e:
+                    print(str(e))
+                    pass
+
     def push_to_aws(self):
         logs = []
         print(
@@ -214,6 +283,8 @@ data_dict={
                         if ts:
                             data_temp = data.get('data', {})
                             item = Vim_Logged_Data_V2(self.__device_id, ts,
+                                                        rideStart=data_temp.get(
+                                                          'RideStart', None),
                                                       rpm=data_temp.get(
                                                           'rpm', None),
                                                       imuAxes=data_temp.get(
@@ -275,6 +346,7 @@ data_dict={
                     except Exception as e:
                         logs.append(
                             f'Exception {e} occured during to data upload')
+                        # print(e)
                         pass
             print(f"Uploaded: {uploaded_counts} out of {len(self.__datalist)}")
 
