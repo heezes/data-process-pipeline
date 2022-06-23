@@ -84,8 +84,9 @@ class tripInfo:
             line["data"]["timestamp"] = line["timestamp"]
             try:
                 idx = (len(data["data"])-1) if (idx == (len(data["data"]) -1 )) else idx+1
-                if (line["data"]["RideState"] == 3 and data['data'][idx]['data']['RideState'] == 1) or \
-                    (line["data"]["RideState"] == 3 and data['data'][idx]['data']['RideState'] == 2):
+                if (line["data"]["rideState"] == 3 and data['data'][idx]['data']['rideState'] == 1) or \
+                    (line["data"]["rideState"] == 3 and data['data'][idx]['data']['rideState'] == 2):
+                    line['data']['tripComplete'] = True
                     trip_data.append(line["data"])
                     total_trips.append(trip_data.copy())
                     trip_data.clear()
@@ -107,6 +108,10 @@ class tripInfo:
                 trip_info['tripTime'] = None
             trip_info['distance'] = self._getTripDistance(total_trips[i])
             trip_info['itemCount'] = self._getItemCount(total_trips[i])
+            if 'tripComplete' in total_trips[i][-1]:
+                trip_info['tripComplete'] = total_trips[i][-1]['tripComplete']
+            else:
+                trip_info['tripComplete'] = False
             dtc = self.getBatteryDtcList(total_trips[i])
             if len(dtc) > 0:
                 trip_info['batteryFault'] = dtc

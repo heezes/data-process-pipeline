@@ -78,7 +78,7 @@ class DataFormatter:
                 temp_dict = {
                     "timestamp": epoch,
                     "data": {
-                        'RideStart':data.get('flag',{}).get('RideStart_flag',0),
+                        'rideState':data.get('flag',{}).get('RideState_flag',0),
                         "rpm": data.get(
                             'rpm', None),
                         "imuAxes": data.get(

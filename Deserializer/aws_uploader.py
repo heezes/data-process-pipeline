@@ -42,7 +42,7 @@ class Vim_Logged_Trips_V2(Model):
         region = 'us-east-1'
     device_id = UnicodeAttribute(hash_key=True)
     timestamp = NumberAttribute(range_key=True)
-    itemCounts = NumberAttribute(null=True)
+    itemCount = NumberAttribute(null=True)
     startSoc = NumberAttribute(null=True)
     stopSoc = NumberAttribute(null=True)
     startSoh = NumberAttribute(null=True)
@@ -52,6 +52,7 @@ class Vim_Logged_Trips_V2(Model):
     tripDistance = NumberAttribute(null=True)
     tripTime = NumberAttribute(null=True)
     batteryFault = ListAttribute(null=True)
+    tripComplete = BooleanAttribute(null=True)
 
 class Vim_Logged_Dtc_V2(Model):
     class Meta:
@@ -76,7 +77,7 @@ class Vim_Logged_Data_V2(Model):
         region = 'us-east-1'
     device_id = UnicodeAttribute(hash_key=True)
     timestamp = NumberAttribute(range_key=True)
-    rideStart=BooleanAttribute(null=True)
+    rideState=NumberAttribute(null=True)
     rpm = NumberAttribute(null=True)
     imuAxes = ListAttribute(null=True)
     batteryShuntCurrent = NumberAttribute(null=True)
@@ -199,13 +200,26 @@ data_dict={
         self.__datalist = data_dict.get('data', [])
 
     def push_trips(self, trips):
+        for query_result in Vim_Logged_Trips_V2.query(hash_key=self.__device_id, consistent_read=True, scan_index_forward=False, limit=2):
+            res = query_result
+            if res.tripComplete == False:
+                print(f"Incomplete Trip found: {res.itemCount},{res.startSoc},{res.startSoh},{res.startTimestamp},{res.batteryFault} - {trips[0]}")
+                trip = trips[0]
+                trip['itemCount'] += res.itemCount
+                trip['startSoc'] = res.startSoc
+                trip['startSoh'] = res.startSoh
+                trip['startTimestamp'] = res.startTimestamp
+                if res.batteryFault != None:
+                    trip['batteryFault'].append(res.batteryFault)
+                trip['tripTime'] = trip['stopTimestamp'] - trip['startTimestamp']
+            break
         for trip in trips:
             with Vim_Logged_Trips_V2.batch_write(auto_commit=True) as batch:
                 try:
                     ts = trip['startTimestamp']
                     if ts != None:
                         item = Vim_Logged_Trips_V2(self.__device_id, ts,
-                                itemCounts = trip['itemCount'],
+                                itemCount = trip['itemCount'],
                                 startSoc = trip['startSoc'],
                                 stopSoc = trip['stopSoc'],
                                 startSoh = trip['startSoh'],
@@ -214,8 +228,10 @@ data_dict={
                                 stopTimestamp = trip['stopTimestamp'],
                                 tripDistance = trip['distance'],
                                 tripTime = trip['tripTime'],
-                                batteryFault = trip['batteryFault'] if 'batteryFault' in trip else None)
+                                batteryFault = trip['batteryFault'] if 'batteryFault' in trip else None,
+                                tripComplete = trip['tripComplete'])
                         batch.save(item)
+                        print(f"Trip Info: {trip}")
                         time.sleep(0.065)
                 except Exception as e:
                     print(e)
@@ -283,8 +299,8 @@ data_dict={
                         if ts:
                             data_temp = data.get('data', {})
                             item = Vim_Logged_Data_V2(self.__device_id, ts,
-                                                        rideStart=data_temp.get(
-                                                          'RideStart', None),
+                                                        rideState=data_temp.get(
+                                                          'rideState', None),
                                                       rpm=data_temp.get(
                                                           'rpm', None),
                                                       imuAxes=data_temp.get(
