@@ -1,5 +1,5 @@
 from pynamodb.models import Model
-from pynamodb.attributes import NullAttribute, NumberAttribute, UnicodeAttribute, JSONAttribute, UnicodeSetAttribute, ListAttribute, BooleanAttribute, UTCDateTimeAttribute
+from pynamodb.attributes import  MapAttribute, NullAttribute, NumberAttribute, UnicodeAttribute, JSONAttribute, UnicodeSetAttribute, ListAttribute, BooleanAttribute, UTCDateTimeAttribute
 import json
 import os
 import time
@@ -51,7 +51,7 @@ class Vim_Logged_Trips_V2(Model):
     stopTimestamp = NumberAttribute(null=True)
     tripDistance = NumberAttribute(null=True)
     tripTime = NumberAttribute(null=True)
-    batteryFault = ListAttribute(null=True)
+    batteryFault = MapAttribute(default={})
     tripComplete = BooleanAttribute(null=True)
 
 class Vim_Logged_Dtc_V2(Model):
@@ -210,7 +210,8 @@ data_dict={
                 trip['startSoh'] = res.startSoh
                 trip['startTimestamp'] = res.startTimestamp
                 if res.batteryFault != None:
-                    trip['batteryFault'].append(res.batteryFault)
+                    for key in res.batteryFault:
+                        trip['batteryFault'][key] += res.batteryFault[key]
                 trip['tripTime'] = trip['stopTimestamp'] - trip['startTimestamp']
             break
         for trip in trips:
