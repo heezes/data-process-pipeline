@@ -33,7 +33,7 @@ class ProcessRawData():
                 awsuploader.push_trips(trips)
             else:
                 print("No Trip Found")
-            dtc = trip.getBatteryDtcList(formatted_data)
+            dtc = trip.getBatteryDtcDict(formatted_data)
             if len(dtc) > 0:
                 awsuploader.push_dtc(dtc)
             else:

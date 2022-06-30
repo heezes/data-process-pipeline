@@ -127,10 +127,12 @@ class tripInfo:
                     about_to_find_ride_end = False
                     if len(trip_data):
                         temp_line = trip_data[-1]
-                        temp_line['data']['tripComplete'] = True
+                        temp_line['tripComplete'] = True
                         trip_data[-1] = temp_line
                         total_trips.append(trip_data.copy())
                         trip_data.clear()
+                    else:
+                        trip_data.append(line["data"])
                 elif (line["data"]["rideState"] == 2 and data['data'][idx]['data']['rideState'] == 3) or \
                     (about_to_find_ride_end == True):
                     about_to_find_ride_end = True
