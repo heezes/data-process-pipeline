@@ -203,16 +203,39 @@ data_dict={
         for query_result in Vim_Logged_Trips_V2.query(hash_key=self.__device_id, consistent_read=True, scan_index_forward=False, limit=2):
             res = query_result
             if res.tripComplete == False:
-                print(f"Incomplete Trip found: {res.itemCount},{res.startSoc},{res.startSoh},{res.startTimestamp},{res.batteryFault} - {trips[0]}")
-                trip = trips[0]
-                trip['itemCount'] += res.itemCount
-                trip['startSoc'] = res.startSoc
-                trip['startSoh'] = res.startSoh
-                trip['startTimestamp'] = res.startTimestamp
-                if res.batteryFault != None:
-                    for key in res.batteryFault:
-                        trip['batteryFault'][key] += res.batteryFault[key]
-                trip['tripTime'] = trip['stopTimestamp'] - trip['startTimestamp']
+                if trip['startTimestamp'] - res.stopTimestamp > 60:
+                    res.tripComplete = True
+                    with Vim_Logged_Trips_V2.batch_write(auto_commit=True) as batch:
+                        try:
+                            ts = res.startTimestamp
+                            if ts != None:
+                                item = Vim_Logged_Trips_V2(self.__device_id, ts,
+                                        itemCount = res.itemCount,
+                                        startSoc = res.startSoc,
+                                        stopSoc = res.stopSoc,
+                                        startSoh = res.startSoh,
+                                        stopSoh = res.stopSoh,
+                                        startTimestamp = res.startTimestamp,
+                                        stopTimestamp = res.stopTimestamp,
+                                        tripDistance = res.tripDistance,
+                                        tripTime = res.tripTime,
+                                        batteryFault = res.batteryFault,
+                                        tripComplete = res.tripComplete)
+                                batch.save(item)
+                        except Exception as e:
+                            print("[#]L226 - aws_uploader.py ",str(e))
+                            pass
+                else:
+                    print(f"Incomplete Trip found: {res.itemCount},{res.startSoc},{res.startSoh},{res.startTimestamp},{res.batteryFault} - {trips[0]}")
+                    trip = trips[0]
+                    trip['itemCount'] += res.itemCount
+                    trip['startSoc'] = res.startSoc
+                    trip['startSoh'] = res.startSoh
+                    trip['startTimestamp'] = res.startTimestamp
+                    if res.batteryFault != None:
+                        for key in res.batteryFault:
+                            trip['batteryFault'][key] += res.batteryFault[key]
+                    trip['tripTime'] = trip['stopTimestamp'] - trip['startTimestamp']
             break
         for trip in trips:
             with Vim_Logged_Trips_V2.batch_write(auto_commit=True) as batch:
