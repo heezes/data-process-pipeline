@@ -10,7 +10,7 @@ class tripInfo:
         if len(data) == 0:
             return None, None
         elif len(data) == 1:
-            return [0], None
+            return data[0]['timestamp'], None
         else:
             return data[0]['timestamp'], data[-1]['timestamp']
 
@@ -38,7 +38,7 @@ class tripInfo:
         if len(temp_soh) == 0:
             return None, None
         elif len(temp_soh) == 1:
-            return [0], None
+            return temp_soh[0], None
         else:
             val = None
             for i in range(0, (len(temp_soh) if len(temp_soh) < 3 else 3)):
@@ -106,6 +106,29 @@ class tripInfo:
                     for key in dtc_dict_keys:
                         dtc_dict[key] += bms[key]
             return dtc_dict
+
+    def __get_timestamp(self, data):
+        try:
+            return data["timestamp"]
+        except Exception as e:
+            print(str(e))
+            pass
+
+    def arrangeRawData(self, data):
+        time_jump_idx = []
+        ride_start_idx = []
+        for idx, line in enumerate(data["data"]):
+            idx = idx if idx == 0 else (idx-1)
+            if line["timestamp"] < data["data"][idx]["timestamp"]:
+                temp_timestamp = line["timestamp"]
+                time_jump_idx.append(idx == idx if idx == 0 else idx+1)
+                if time_jump_idx[-1] - ride_start_idx[-1] <= 6:
+                    for i in range(ride_start_idx[-1], time_jump_idx[-1]):
+                        data["data"][i]["timestamp"] = temp_timestamp
+            if line["data"]["rideState"] == 1:
+                ride_start_idx.append((idx == idx if idx == 0 else idx+1))
+        data["data"].sort(key=self.__get_timestamp)
+        return data
 
     def getTripStats(self, data):
         total_trips = []
