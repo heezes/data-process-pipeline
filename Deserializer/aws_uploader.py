@@ -203,6 +203,7 @@ data_dict={
         for query_result in Vim_Logged_Trips_V2.query(hash_key=self.__device_id, consistent_read=True, scan_index_forward=False, limit=2):
             res = query_result
             if res.tripComplete == False:
+                trip = trips[0]
                 if trip['startTimestamp'] - res.stopTimestamp > 60:
                     res.tripComplete = True
                     with Vim_Logged_Trips_V2.batch_write(auto_commit=True) as batch:
@@ -227,7 +228,6 @@ data_dict={
                             pass
                 else:
                     print(f"Incomplete Trip found: {res.itemCount},{res.startSoc},{res.startSoh},{res.startTimestamp},{res.batteryFault} - {trips[0]}")
-                    trip = trips[0]
                     trip['itemCount'] += res.itemCount
                     trip['startSoc'] = res.startSoc
                     trip['startSoh'] = res.startSoh
