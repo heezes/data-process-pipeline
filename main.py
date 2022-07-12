@@ -95,14 +95,14 @@ def decode_and_push_data(Thread,batch, filter_devices):
             temp = filename.split(".")[0].split("-")
             deviceId = temp[0]+"-"+temp[1]+"-"+temp[2]
             fileLastModified = os.path.getmtime(filepath)
-            if(time.time() - fileLastModified > 1):#(60*60*3)):
+            if(time.time() - fileLastModified > (60*60*3)):
                 if deviceId in filter_devices:
                     decode_file(deviceId, Thread, batch, filepath)
                 else:
                     print("Decoding Via New Method")
                     NewProcess = guru_decode.ProcessRawData(filepath)
                     NewProcess.decodeAndUpload(filepath)
-                # shutil.move(filepath, "/var/backup/"+filename)
+                shutil.move(filepath, "/var/backup/"+filename)
             else:
                 print("File too new to be processed!")
     except Exception as e:
