@@ -1,3 +1,4 @@
+import sys
 from textwrap import indent
 from Deserializer.aws_uploader import AWSUploader, VIM_REALTIME_DATA,VIM_LOGGED_DATA,VIM_LOGGED_DATA_V2
 from Deserializer.deserializer import DeSerializer, BASEDIR
@@ -28,8 +29,8 @@ class ProcessRawData():
             awsuploader=AWSUploader(TABLE_ID=VIM_LOGGED_DATA_V2,DEVICE_ID=self.deviceId,data_dict=formatted_data)
             print(awsuploader.push_to_aws())
             trip = tripInfo()
-            trips = trip.getTripStats(trip.arrangeRawData(formatted_data))
-            # trips = trip.getTripStats(formatted_data)
+            raw_data = trip.arrangeRawData(formatted_data)
+            trips = trip.getTripStats(raw_data)
             if len(trips) > 0:
                 awsuploader.push_trips(trips)
             else:
@@ -42,5 +43,8 @@ class ProcessRawData():
             os.remove(outfilepath)
             print("{}: Upload Successful!".format(time.time()))
         except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
             print(f"{time.time()}: Guru decodeAndUpload Error: {str(e)}")
             pass
