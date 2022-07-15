@@ -29,8 +29,8 @@ class ProcessRawData():
             awsuploader=AWSUploader(TABLE_ID=VIM_LOGGED_DATA_V2,DEVICE_ID=self.deviceId,data_dict=formatted_data)
             print(awsuploader.push_to_aws())
             trip = tripInfo()
-            raw_data = trip.arrangeRawData(formatted_data)
-            trips = trip.getTripStats(raw_data)
+            # raw_data = trip.arrangeRawData(formatted_data)
+            trips = trip.getTripStats(formatted_data)
             if len(trips) > 0:
                 awsuploader.push_trips(trips)
             else:
